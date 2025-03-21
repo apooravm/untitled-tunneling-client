@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -12,6 +13,27 @@ import (
 var serverAddr = "ws://localhost:4000/api/tunnel"
 
 func main() {
+	conn, _, err := websocket.DefaultDialer.Dial(serverAddr, nil)
+	if err != nil {
+		log.Println("E:Connecting ws server.", err.Error())
+		return
+	}
+
+	defer conn.Close()
+
+	for {
+		_, message, err := conn.ReadMessage()
+		if err != nil {
+			log.Println("Error reading from connection", err.Error())
+			return
+		}
+
+		fmt.Println("Message:", string(message))
+		break
+	}
+}
+
+func main2() {
 	localAddr := flag.String("local", "localhost:8081", "Local service to expose.")
 	flag.Parse()
 
