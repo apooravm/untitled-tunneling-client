@@ -29,6 +29,21 @@ func main() {
 		}
 
 		fmt.Println("Message:", string(message))
+
+		// Send http request data
+		res, err := http.Get("http://localhost:5000")
+		if err != nil {
+			log.Println("Error sending request")
+		}
+
+		defer res.Body.Close()
+
+		resData, err := io.ReadAll(res.Body)
+		if err != nil {
+			log.Println("Error reading response data", err.Error())
+		}
+
+		conn.WriteMessage(websocket.BinaryMessage, resData)
 		break
 	}
 }
