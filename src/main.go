@@ -10,9 +10,15 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-var serverAddr = "ws://localhost:4000/api/tunnel"
+var serverAddr = "ws://localhost:4000/api/tunnel/host"
+var testServerAddr = "http://localhost:4000"
+var hostServerAddr = "http://localhost:5000"
 
+// Bit of an issue here regarding how i am handling routepaths
+// So if the routepath is empty or "", it defaults to localhost:5000 NOT localhost:5000/
+// Even though they are different. Dunno how to differentiate b/w them for now
 func main() {
+	fmt.Println("Online")
 	conn, _, err := websocket.DefaultDialer.Dial(serverAddr, nil)
 	if err != nil {
 		log.Println("E:Connecting ws server.", err.Error())
@@ -28,12 +34,23 @@ func main() {
 			return
 		}
 
-		fmt.Println("Message:", string(message))
+		routepath := string(message[2:])
+		fmt.Println("Target route path:", routepath)
+
+		endpoint := ""
+		if routepath == "" {
+			endpoint = hostServerAddr
+
+		} else {
+			endpoint = hostServerAddr + "/" + routepath
+		}
+
+		fmt.Println("Endpoint was:", endpoint)
 
 		// Send http request data
-		res, err := http.Get("http://localhost:5000")
+		res, err := http.Get(endpoint)
 		if err != nil {
-			log.Println("Error sending request")
+			log.Println("Error sending request to localhost")
 		}
 
 		defer res.Body.Close()
@@ -44,7 +61,6 @@ func main() {
 		}
 
 		conn.WriteMessage(websocket.BinaryMessage, resData)
-		break
 	}
 }
 
